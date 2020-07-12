@@ -132,11 +132,17 @@ const ext = {
                             if (page.abstract)
                                 page.abstract = ext.toHtml(page.abstract, false);
                         }
+                        if (page.layout === 'navigation') {
+                            page.navigation = '<base target="_parent">';
+                        }
                         if (page.uses) {
                             for (const use of page.uses) {
-                                const file = path.resolve(basedir,use.uri);
-                                if (fs.existsSync(file))
-                                    use.content = ext.toHtml(fs.readFileSync(file,'utf8'), false);
+                                const file = path.join(path.dirname(page.uri), reldir, use.uri);
+                                if (fs.existsSync(file)) {
+                                    // TODO id is hardcoded...
+                                    const relpath  = path.relative(path.dirname(page.uri), file);
+                                    use.content = `<iframe id="nav" src="${relpath}"></iframe>`
+                                }
                             }
                         }
                     }
@@ -419,12 +425,12 @@ page(data) {
 <meta name="description" content="\${data.description || (data.title + ' - microjam page')}">
 \${data.date ? \`<meta name="date" content="\${new Date(data.date).toString()}">\` : ''}
 \${data.tags ? \`<meta name="keywords" content="\${data.tags.join()}">\` : ''}
-<base href="\${'./'+data.reldir}">
 <title>\${data.title}</title>
+\${data.navigation || ''}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/github-gist.min.css">
 \${data.math ? \`<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.css">\` : ''}
-<link rel="stylesheet" href="./theme/styles.css">
+<link rel="stylesheet" href="\${data.reldir}theme/styles.css">
 </head>
 <body>
 <header>
